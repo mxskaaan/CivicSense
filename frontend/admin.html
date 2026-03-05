@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - CivicSense</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="logo.svg" alt="CivicSense Logo">
+      <span>CivicSense</span>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Report Issue</a>
+      <a href="admin.html" class="active">Admin Dashboard</a>
+      <a href="map.html">Map View</a>
+      <a href="dashboard.html">Analytics</a>
+    </div>
+  </nav>
+
+  <!-- Dashboard Content -->
+  <div class="dashboard-content">
+
+    <!-- Dashboard Header with Background -->
+    <div class="dashboard-header-hero">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1>🛠️ Admin Dashboard</h1>
+        <p>Manage and track all civic complaints. Update status, prioritize issues, and monitor resolution progress.</p>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+      <input
+        class="searchBar"
+        id="search"
+        type="text"
+        placeholder="Search by issue, location, or ticket ID..."
+        onkeyup="searchComplaints()"
+      />
+    </div>
+
+    <!-- Complaints List -->
+    <div id="complaintList" class="complaint-grid"></div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <img src="logo.svg" alt="CivicSense" height="32">
+        <span>CivicSense</span>
+      </div>
+      <div class="footer-links">
+        <a href="index.html">Report Issue</a>
+        <a href="admin.html">Admin</a>
+        <a href="map.html">Map</a>
+        <a href="dashboard.html">Analytics</a>
+      </div>
+      <div class="footer-social">
+        <a href="#" title="Instagram">📷</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 CivicSense. Making cities smarter, one report at a time. 🏙️</p>
+    </div>
+  </footer>
+
+  <script src="auth.js"></script>
+  <script>
+    let complaintsData = [];
+
+    // Load all complaints
+    function loadComplaints() {
+      fetch("http://localhost:5000/complaints")
+        .then(res => res.json())
+        .then(data => {
+          complaintsData = data;
+          displayComplaints(data);
+        })
+        .catch(err => {
+          console.error("Error loading complaints:", err);
+        });
+    }
+
+    // Display complaints as cards
+    function displayComplaints(data) {
+      let html = "";
+
+      if (data.length === 0) {
+        html = `
+          <div style="text-align:center; padding:60px 20px; color:#64748b;">
+            <h3>No complaints found</h3>
+            <p>There are no complaints matching your search criteria.</p>
+          </div>
+        `;
+      } else {
+        data.forEach(c => {
+          // Determine status badge class
+          let statusClass = "badge-pending";
+          if (c.status === "In Progress") statusClass = "badge-progress";
+          if (c.status === "Resolved") statusClass = "badge-resolved";
+
+          // Determine priority badge
+          let priorityClass = c.priority === "High" ? "badge-high" : "badge-normal";
+
+          html += `
+            <div class="complaintCard">
+              
+              <!-- Card Header -->
+              <div class="complaint-header">
+                <span class="complaint-id">${c.ticketId || 'N/A'}</span>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <span class="badge ${statusClass}">${c.status}</span>
+                  <span class="badge ${priorityClass}">${c.priority || 'Normal'}</span>
+                </div>
+              </div>
+
+              <!-- Complaint Info -->
+              <div class="complaint-info">
+                <div class="info-row">
+                  <span class="info-label">Reporter:</span>
+                  <span class="info-value">${c.name}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Issue:</span>
+                  <span class="info-value">${c.issue}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Location:</span>
+                  <span class="info-value">${c.location}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Submitted:</span>
+                  <span class="info-value">${new Date(c.createdAt || Date.now()).toLocaleDateString()}</span>
+                </div>
+              </div>
+
+              <!-- Photo -->
+              ${c.photo ? `
+                <div class="complaint-image">
+                  <img src="http://localhost:5000/uploads/${c.photo}" alt="Issue photo">
+                </div>
+              ` : ''}
+
+              <!-- Action Buttons -->
+              <div class="complaint-actions">
+                ${c.status === "Pending" ? `
+                  <button class="btn-warning btn-small" onclick="updateStatus('${c._id}','In Progress')">
+                    🔄 Start Work
+                  </button>
+                ` : ''}
+                ${c.status !== "Resolved" ? `
+                  <button class="btn-success btn-small" onclick="updateStatus('${c._id}','Resolved')">
+                    ✓ Mark Resolved
+                  </button>
+                ` : ''}
+                ${c.status === "Resolved" ? `
+                  <button class="btn-secondary btn-small" onclick="updateStatus('${c._id}','Pending')">
+                    ↺ Reopen
+                  </button>
+                ` : ''}
+              </div>
+
+            </div>
+          `;
+        });
+      }
+
+      document.getElementById("complaintList").innerHTML = html;
+    }
+
+    // Update complaint status
+    function updateStatus(id, status) {
+      fetch("http://localhost:5000/updateStatus", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          id: id,
+          status: status
+        })
+      })
+        .then(res => res.text())
+        .then(data => {
+          // Show success message
+          alert(`✓ Status updated to: ${status}`);
+          loadComplaints();
+        })
+        .catch(err => {
+          alert("Error updating status");
+          console.error(err);
+        });
+    }
+
+    // Search complaints
+    function searchComplaints() {
+      let query = document.getElementById("search").value.toLowerCase();
+
+      let filtered = complaintsData.filter(c =>
+        c.issue.toLowerCase().includes(query) ||
+        c.location.toLowerCase().includes(query) ||
+        (c.ticketId && c.ticketId.toLowerCase().includes(query)) ||
+        c.name.toLowerCase().includes(query)
+      );
+
+      displayComplaints(filtered);
+    }
+
+    // Initial load
+    loadComplaints();
+
+    // Auto refresh every 30 seconds
+    setInterval(loadComplaints, 30000);
+
+    // Mark current page as active
+    document.addEventListener('DOMContentLoaded', function() {
+      const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+      document.querySelectorAll('.nav-links a').forEach(link => {
+        if (link.getAttribute('href') === currentPage) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+
+</body>
+
+</html>

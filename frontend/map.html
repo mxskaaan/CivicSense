@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map View - CivicSense</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  
+  <style>
+    body {
+      background: #f5f7fb;
+    }
+
+    .leaflet-popup-content-wrapper {
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .leaflet-popup-content {
+      margin: 16px;
+      font-family: inherit;
+    }
+
+    .popup-content {
+      min-width: 200px;
+    }
+
+    .popup-content strong {
+      color: #1e293b;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .popup-content p {
+      margin: 8px 0;
+      color: #475569;
+      font-size: 14px;
+    }
+
+    .popup-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="logo.svg" alt="CivicSense Logo">
+      <span>CivicSense</span>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Report Issue</a>
+      <a href="admin.html">Admin Dashboard</a>
+      <a href="map.html" class="active">Map View</a>
+      <a href="dashboard.html">Analytics</a>
+    </div>
+  </nav>
+
+  <!-- Map Container -->
+  <div class="map-container">
+
+    <!-- Map Header with Background -->
+    <div class="dashboard-header-hero hero-map">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1>🗺️ Complaint Map</h1>
+        <p>Interactive map showing all reported civic issues with heatmap visualization for hotspot areas</p>
+      </div>
+    </div>
+
+    <!-- Search Box -->
+    <div class="searchBox">
+      <input
+        id="locationSearch"
+        type="text"
+        placeholder="Search location (e.g., Patna Junction, Gandhi Maidan)"
+        oninput="showMapSuggestions(this.value)"
+      />
+      <button onclick="searchLocation()">🔍 Search</button>
+      
+      <!-- Map Search Suggestions -->
+      <div id="mapSuggestions" class="location-suggestions" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 8px;"></div>
+    </div>
+
+    <!-- Map -->
+    <div id="map"></div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <img src="logo.svg" alt="CivicSense" height="32">
+        <span>CivicSense</span>
+      </div>
+      <div class="footer-links">
+        <a href="index.html">Report Issue</a>
+        <a href="admin.html">Admin</a>
+        <a href="map.html">Map</a>
+        <a href="dashboard.html">Analytics</a>
+      </div>
+      <div class="footer-social">
+        <a href="#" title="Instagram">📷</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 CivicSense. Making cities smarter, one report at a time. 🏙️</p>
+    </div>
+  </footer>
+
+  <script src="auth.js"></script>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
+  <script>
+    // Initialize map centered on Bihar (Patna)
+    var map = L.map('map').setView([25.5941, 85.1376], 12);
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Custom marker icons based on status
+    const getMarkerIcon = (status) => {
+      let color = '#f59e0b'; // Pending - orange
+      if (status === 'In Progress') color = '#3b82f6'; // blue
+      if (status === 'Resolved') color = '#22c55e'; // green
+
+      return L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="
+          background: ${color};
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          border: 3px solid white;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        "></div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+    };
+
+    // Map Search Suggestions
+    let mapSearchTimeout;
+    async function showMapSuggestions(query) {
+      clearTimeout(mapSearchTimeout);
+      
+      if (query.length < 3) {
+        document.getElementById('mapSuggestions').style.display = 'none';
+        return;
+      }
+
+      mapSearchTimeout = setTimeout(async () => {
+        try {
+          const searchQuery = query.includes(',') ? query : `${query}, India`;
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5&addressdetails=1`
+          );
+          const results = await response.json();
+
+          if (results.length > 0) {
+            const suggestionsDiv = document.getElementById('mapSuggestions');
+            
+            suggestionsDiv.innerHTML = results.map(result => `
+              <div class="location-suggestion-item" onclick="selectMapLocation('${result.display_name.replace(/'/g, "\\'")}', ${result.lat}, ${result.lon})">
+                <div class="location-icon">📍</div>
+                <div class="location-details">
+                  <div class="location-name">${result.display_name}</div>
+                  <div class="location-type">${result.type || 'Location'}</div>
+                </div>
+              </div>
+            `).join('');
+            
+            suggestionsDiv.style.display = 'block';
+          } else {
+            document.getElementById('mapSuggestions').style.display = 'none';
+          }
+        } catch (error) {
+          console.error('Map search error:', error);
+        }
+      }, 500);
+    }
+
+    function selectMapLocation(displayName, lat, lon) {
+      document.getElementById('locationSearch').value = displayName;
+      document.getElementById('mapSuggestions').style.display = 'none';
+      
+      map.setView([lat, lon], 15);
+      L.marker([lat, lon])
+        .addTo(map)
+        .bindPopup(`<strong>📍 ${displayName}</strong>`)
+        .openPopup();
+    }
+
+    // Search location function
+    function searchLocation() {
+      let place = document.getElementById("locationSearch").value.trim();
+
+      if (!place) {
+        alert("⚠️ Please enter a location to search");
+        return;
+      }
+
+      // Show loading state
+      const searchBtn = document.querySelector('.searchBox button');
+      const originalText = searchBtn.innerHTML;
+      searchBtn.innerHTML = '<span class="spinner"></span>';
+      searchBtn.disabled = true;
+
+      // Add country/region context for better results
+      const searchQuery = place.includes(',') ? place : `${place}, India`;
+
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5`)
+        .then(res => res.json())
+        .then(data => {
+          searchBtn.innerHTML = originalText;
+          searchBtn.disabled = false;
+
+          if (data.length > 0) {
+            // Use the first result
+            let lat = parseFloat(data[0].lat);
+            let lon = parseFloat(data[0].lon);
+            let displayName = data[0].display_name;
+
+            map.setView([lat, lon], 15);
+
+            // Add marker with popup
+            L.marker([lat, lon])
+              .addTo(map)
+              .bindPopup(`<strong>📍 ${displayName}</strong>`)
+              .openPopup();
+
+            // Show success message
+            console.log(`Found: ${displayName}`);
+          } else {
+            alert(`❌ Location "${place}" not found. Try:\n• Adding more details (e.g., "Patna Junction, Bihar")\n• Using a nearby landmark\n• Checking spelling`);
+          }
+        })
+        .catch(err => {
+          console.error("Error searching location:", err);
+          searchBtn.innerHTML = originalText;
+          searchBtn.disabled = false;
+          alert("❌ Error searching location. Please check your internet connection and try again.");
+        });
+    }
+
+    // Allow Enter key to search
+    document.getElementById("locationSearch").addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        searchLocation();
+      }
+    });
+
+    // Load complaints and add to map
+    let heatPoints = [];
+
+    fetch("http://localhost:5000/complaints")
+      .then(res => res.json())
+      .then(data => {
+        
+        data.forEach(c => {
+          if (c.latitude && c.longitude) {
+            
+            // Add marker with custom icon
+            const marker = L.marker([c.latitude, c.longitude], {
+              icon: getMarkerIcon(c.status)
+            }).addTo(map);
+
+            // Create popup content
+            let statusClass = 'popup-badge';
+            let statusStyle = '';
+            if (c.status === 'Pending') {
+              statusStyle = 'background: #fef3c7; color: #92400e; border: 1px solid #fbbf24;';
+            } else if (c.status === 'In Progress') {
+              statusStyle = 'background: #dbeafe; color: #1e40af; border: 1px solid #60a5fa;';
+            } else if (c.status === 'Resolved') {
+              statusStyle = 'background: #d1fae5; color: #065f46; border: 1px solid #34d399;';
+            }
+
+            const popupContent = `
+              <div class="popup-content">
+                <strong>🎫 ${c.ticketId || 'N/A'}</strong>
+                <p><strong>Issue:</strong> ${c.issue}</p>
+                <p><strong>Location:</strong> ${c.location}</p>
+                <p><strong>Reporter:</strong> ${c.name}</p>
+                <span class="${statusClass}" style="${statusStyle}">
+                  ${c.status}
+                </span>
+              </div>
+            `;
+
+            marker.bindPopup(popupContent);
+
+            // Add to heatmap data
+            heatPoints.push([c.latitude, c.longitude, 0.6]);
+          }
+        });
+
+        // Add heatmap layer
+        if (heatPoints.length > 0) {
+          L.heatLayer(heatPoints, {
+            radius: 25,
+            blur: 20,
+            maxZoom: 17,
+            gradient: {
+              0.0: '#3b82f6',
+              0.5: '#f59e0b',
+              1.0: '#ef4444'
+            }
+          }).addTo(map);
+        }
+
+        // Fit map to show all markers
+        if (data.length > 0) {
+          const bounds = data
+            .filter(c => c.latitude && c.longitude)
+            .map(c => [c.latitude, c.longitude]);
+          
+          if (bounds.length > 0) {
+            map.fitBounds(bounds, { padding: [50, 50] });
+          }
+        }
+      })
+      .catch(err => {
+        console.error("Error loading complaints:", err);
+      });
+
+    // Mark current page as active
+    document.addEventListener('DOMContentLoaded', function() {
+      const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+      document.querySelectorAll('.nav-links a').forEach(link => {
+        if (link.getAttribute('href') === currentPage) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+
+</body>
+
+</html>

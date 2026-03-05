@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - CivicSense</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="logo.svg" alt="CivicSense Logo">
+      <span>CivicSense</span>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Report Issue</a>
+      <a href="admin.html">Admin Dashboard</a>
+      <a href="map.html">Map View</a>
+      <a href="dashboard.html">Analytics</a>
+    </div>
+  </nav>
+
+  <!-- Settings Container -->
+  <div class="settings-container">
+
+    <!-- Header -->
+    <div class="dashboard-header">
+      <h1>⚙️ Settings</h1>
+      <p>Customize your CivicSense experience</p>
+    </div>
+
+    <!-- Account Settings -->
+    <div class="settings-section">
+      <h3>👤 Account Settings</h3>
+      
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <h4>Profile Information</h4>
+          <p>Update your name, email, and phone number</p>
+        </div>
+        <button class="btn-secondary btn-small" onclick="alert('Profile editing coming soon!')">Edit</button>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <h4>Change Password</h4>
+          <p>Update your account password</p>
+        </div>
+        <button class="btn-secondary btn-small" onclick="alert('Password change coming soon!')">Change</button>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <h4>Two-Factor Authentication</h4>
+          <p>Add an extra layer of security</p>
+        </div>
+        <div class="toggle-switch" onclick="toggleSetting(this)"></div>
+      </div>
+    </div>
+
+    <!-- Notification Settings -->
+    <div class="settings-section">
+      <h3>🔔 Notification Preferences</h3>
+      
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <h4>Email Notifications</h4>
+          <p>Receive updates via email</p>
+        </div>
+        <div class="toggle-switch active" onclick="toggleSetting(this)"></div>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <h4>Push Notifications</h4>
+          <p>Get real-time alerts on your device</p>
+        </div>
+        <div class="toggle-switch active" onclick="toggleSetting(this)"></div>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <h4>SMS Alerts</h4>
+          <p>Receive important updates via SMS</p>
+        </div>
+        <div class="toggle-switch" onclick="toggleSetting(this)"></div>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <h4>Status Updates</h4>
+          <p>Get notified when complaint status changes</p>
+        </div>
+        <div class="toggle-switch active" onclick="toggleSetting(this)"></div>
+      </div>
+    </div>
+
+    <!-- Appearance Settings -->
+    <div class="settings-section">
+      <h3>🎨 Appearance</h3>
+      
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <h4>Dark Mode</h4>
+          <p>Switch to dark theme</p>
+        </div>
+        <div class="toggle-switch" id="darkModeToggle" onclick="toggleDarkMode(this)"></div>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <h4>Compact View</h4>
+          <p>Show more content on screen</p>
+        </div>
+        <div class="toggle-switch" onclick="toggleSetting(this)"></div>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <h4>Animations</h4>
+          <p>Enable smooth transitions and effects</p>
+        </div>
+        <div class="toggle-switch active" onclick="toggleSetting(this)"></div>
+      </div>
+    </div>
+
+    <!-- Privacy Settings -->
+    <div class="settings-section">
+      <h3>🔒 Privacy & Security</h3>
+      
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <h4>Location Sharing</h4>
+          <p>Allow automatic location detection</p>
+        </div>
+        <div class="toggle-switch active" onclick="toggleSetting(this)"></div>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <h4>Public Profile</h4>
+          <p>Make your complaints visible to others</p>
+        </div>
+        <div class="toggle-switch" onclick="toggleSetting(this)"></div>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <h4>Data Collection</h4>
+          <p>Help improve CivicSense with usage data</p>
+        </div>
+        <div class="toggle-switch active" onclick="toggleSetting(this)"></div>
+      </div>
+    </div>
+
+    <!-- Language & Region -->
+    <div class="settings-section">
+      <h3>🌍 Language & Region</h3>
+      
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <h4>Language</h4>
+          <p>Choose your preferred language</p>
+        </div>
+        <select style="padding: 8px 16px; border-radius: 8px; border: 2px solid var(--gray-200);">
+          <option>English</option>
+          <option>Hindi (हिंदी)</option>
+          <option>Bengali (বাংলা)</option>
+          <option>Telugu (తెలుగు)</option>
+          <option>Marathi (मराठी)</option>
+          <option>Tamil (தமிழ்)</option>
+        </select>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <h4>Time Zone</h4>
+          <p>Set your local time zone</p>
+        </div>
+        <select style="padding: 8px 16px; border-radius: 8px; border: 2px solid var(--gray-200);">
+          <option>IST (UTC+5:30)</option>
+          <option>EST (UTC-5:00)</option>
+          <option>PST (UTC-8:00)</option>
+          <option>GMT (UTC+0:00)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="settings-section" style="border: 2px solid rgba(239, 68, 68, 0.3);">
+      <h3 style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">⚠️ Danger Zone</h3>
+      
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <h4>Export Data</h4>
+          <p>Download all your data</p>
+        </div>
+        <button class="btn-secondary btn-small" onclick="alert('Data export will be available soon!')">Export</button>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <h4>Delete Account</h4>
+          <p>Permanently delete your account and data</p>
+        </div>
+        <button class="btn-secondary btn-small" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;" onclick="confirmDelete()">Delete</button>
+      </div>
+    </div>
+
+    <!-- Save Button -->
+    <div style="text-align: center; margin-top: 32px;">
+      <button class="btn-primary" style="padding: 14px 48px;" onclick="saveSettings()">
+        💾 Save Changes
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <img src="logo.svg" alt="CivicSense" height="32">
+        <span>CivicSense</span>
+      </div>
+      <div class="footer-links">
+        <a href="index.html">Report Issue</a>
+        <a href="admin.html">Admin</a>
+        <a href="map.html">Map</a>
+        <a href="dashboard.html">Analytics</a>
+      </div>
+      <div class="footer-social">
+        <a href="#" title="Instagram">📷</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 CivicSense. Making cities smarter, one report at a time. 🏙️</p>
+    </div>
+  </footer>
+
+  <script src="auth.js"></script>
+  <script>
+    function toggleSetting(element) {
+      element.classList.toggle('active');
+    }
+
+    function toggleDarkMode(element) {
+      element.classList.toggle('active');
+      document.body.classList.toggle('dark-mode');
+      
+      // Save preference
+      const isDark = document.body.classList.contains('dark-mode');
+      localStorage.setItem('darkMode', isDark);
+    }
+
+    function saveSettings() {
+      alert('✅ Settings saved successfully!');
+    }
+
+    function confirmDelete() {
+      if (confirm('⚠️ Are you sure you want to delete your account? This action cannot be undone.')) {
+        if (confirm('This will permanently delete all your data. Are you absolutely sure?')) {
+          alert('Account deletion request submitted. You will receive a confirmation email.');
+        }
+      }
+    }
+
+    // Load dark mode preference
+    window.addEventListener('DOMContentLoaded', function() {
+      const darkMode = localStorage.getItem('darkMode') === 'true';
+      if (darkMode) {
+        document.body.classList.add('dark-mode');
+        document.getElementById('darkModeToggle').classList.add('active');
+      }
+    });
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Report Problem - CivicSense</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .simple-container {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+    }
+
+    .simple-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .simple-header img {
+      width: 200px;
+      margin-bottom: 20px;
+    }
+
+    .simple-header h1 {
+      font-size: 28px;
+      color: var(--gray-800);
+      margin-bottom: 10px;
+    }
+
+    .simple-step {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      border: 2px solid var(--gray-200);
+    }
+
+    .step-number {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--gradient-primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 900;
+      margin: 0 auto 20px;
+    }
+
+    .step-title {
+      font-size: 20px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 20px;
+      color: var(--gray-800);
+    }
+
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .icon-button {
+      background: rgba(102, 126, 234, 0.05);
+      border: 3px solid transparent;
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .icon-button:hover {
+      background: rgba(102, 126, 234, 0.1);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
+    }
+
+    .icon-button.selected {
+      background: rgba(102, 126, 234, 0.15);
+      border-color: #667eea;
+    }
+
+    .icon-button .icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+
+    .icon-button .label {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gray-700);
+    }
+
+    .big-button {
+      width: 100%;
+      padding: 20px;
+      font-size: 20px;
+      font-weight: 900;
+      border-radius: 16px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      transition: all 0.3s ease;
+      margin-top: 20px;
+    }
+
+    .big-button.primary {
+      background: var(--gradient-primary);
+      color: white;
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+    }
+
+    .big-button.primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+
+    .big-button.secondary {
+      background: white;
+      color: var(--gray-700);
+      border: 3px solid var(--gray-300);
+    }
+
+    .big-button.secondary:hover {
+      background: var(--gray-50);
+      border-color: #667eea;
+    }
+
+    .photo-preview {
+      width: 100%;
+      max-height: 300px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-top: 15px;
+      border: 3px solid var(--gray-200);
+    }
+
+    .voice-recording {
+      text-align: center;
+      padding: 30px;
+      background: rgba(239, 68, 68, 0.05);
+      border-radius: 16px;
+      border: 3px dashed #ef4444;
+      margin-top: 15px;
+    }
+
+    .voice-recording.active {
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .success-screen {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .success-icon {
+      font-size: 100px;
+      margin-bottom: 20px;
+      animation: bounceIn 0.6s ease;
+    }
+
+    @keyframes bounceIn {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="simple-container" id="simpleReportContainer">
+    
+    <!-- Header -->
+    <div class="simple-header">
+      <img src="logo.svg" alt="CivicSense">
+      <h1>🏙️ Report a Problem</h1>
+      <p style="font-size: 16px; color: var(--gray-600);">Help us fix issues in your area</p>
+    </div>
+
+    <!-- Step 1: Choose Problem Type -->
+    <div id="step1" class="simple-step">
+      <div class="step-number">1</div>
+      <div class="step-title">What is the problem?</div>
+      
+      <div class="icon-grid">
+        <div class="icon-button" onclick="selectProblem('pothole', this)">
+          <div class="icon">🕳️</div>
+          <div class="label">Pothole</div>
+        </div>
+        
+        <div class="icon-button" onclick="selectProblem('garbage', this)">
+          <div class="icon">🗑️</div>
+          <div class="label">Garbage</div>
+        </div>
+        
+        <div class="icon-button" onclick="selectProblem('streetlight', this)">
+          <div class="icon">💡</div>
+          <div class="label">Street Light</div>
+        </div>
+        
+        <div class="icon-button" onclick="selectProblem('water', this)">
+          <div class="icon">💧</div>
+          <div class="label">Water Leak</div>
+        </div>
+        
+        <div class="icon-button" onclick="selectProblem('drainage', this)">
+          <div class="icon">🚰</div>
+          <div class="label">Drainage</div>
+        </div>
+        
+        <div class="icon-button" onclick="selectProblem('road', this)">
+          <div class="icon">🛣️</div>
+          <div class="label">Road Damage</div>
+        </div>
+        
+        <div class="icon-button" onclick="selectProblem('park', this)">
+          <div class="icon">🌳</div>
+          <div class="label">Park Issue</div>
+        </div>
+        
+        <div class="icon-button" onclick="selectProblem('traffic', this)">
+          <div class="icon">🚦</div>
+          <div class="label">Traffic</div>
+        </div>
+      </div>
+
+      <button class="big-button secondary" onclick="startVoiceDescription()" style="margin-top: 30px;">
+        <span style="font-size: 32px;">🎤</span>
+        <span>Speak Your Problem</span>
+      </button>
+    </div>
+
+    <!-- Step 2: Take Photo -->
+    <div id="step2" class="simple-step hidden">
+      <div class="step-number">2</div>
+      <div class="step-title">Take a Photo</div>
+      
+      <input type="file" id="photoInput" accept="image/*" capture="environment" style="display: none;" onchange="handlePhoto(event)">
+      
+      <button class="big-button primary" onclick="document.getElementById('photoInput').click()">
+        <span style="font-size: 32px;">📷</span>
+        <span>Take Photo</span>
+      </button>
+
+      <button class="big-button secondary" onclick="skipPhoto()">
+        <span>Skip Photo</span>
+      </button>
+
+      <img id="photoPreview" class="photo-preview hidden" alt="Photo preview">
+    </div>
+
+    <!-- Step 3: Location -->
+    <div id="step3" class="simple-step hidden">
+      <div class="step-number">3</div>
+      <div class="step-title">Where is the problem?</div>
+      
+      <button class="big-button primary" onclick="getLocation()">
+        <span style="font-size: 32px;">📍</span>
+        <span id="locationText">Get My Location</span>
+      </button>
+
+      <div id="locationDisplay" class="hidden" style="margin-top: 20px; padding: 20px; background: rgba(34, 197, 94, 0.1); border-radius: 12px; text-align: center;">
+        <div style="font-size: 32px; margin-bottom: 10px;">✅</div>
+        <div style="font-size: 16px; font-weight: 700; color: var(--gray-800);">Location Detected!</div>
+        <div id="locationCoords" style="font-size: 14px; color: var(--gray-600); margin-top: 5px;"></div>
+      </div>
+    </div>
+
+    <!-- Step 4: Your Name -->
+    <div id="step4" class="simple-step hidden">
+      <div class="step-number">4</div>
+      <div class="step-title">Your Name (Optional)</div>
+      
+      <input type="text" id="nameInput" placeholder="Enter your name" style="width: 100%; padding: 20px; font-size: 18px; border-radius: 12px; border: 3px solid var(--gray-200); margin-bottom: 15px;">
+
+      <button class="big-button secondary" onclick="startVoiceName()">
+        <span style="font-size: 32px;">🎤</span>
+        <span>Speak Your Name</span>
+      </button>
+
+      <button class="big-button secondary" onclick="skipName()">
+        <span>Skip Name</span>
+      </button>
+    </div>
+
+    <!-- Step 5: Submit -->
+    <div id="step5" class="simple-step hidden">
+      <div class="step-number">5</div>
+      <div class="step-title">Submit Report</div>
+      
+      <div style="background: rgba(102, 126, 234, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+        <div style="font-size: 16px; font-weight: 700; color: var(--gray-800); margin-bottom: 15px;">Review Your Report:</div>
+        <div id="reviewContent"></div>
+      </div>
+
+      <button class="big-button primary" onclick="submitReport()">
+        <span style="font-size: 32px;">✅</span>
+        <span>Submit Report</span>
+      </button>
+
+      <button class="big-button secondary" onclick="startOver()">
+        <span>Start Over</span>
+      </button>
+    </div>
+
+    <!-- Success Screen -->
+    <div id="successScreen" class="simple-step hidden">
+      <div class="success-screen">
+        <div class="success-icon">🎉</div>
+        <h2 style="font-size: 28px; color: var(--gray-800); margin-bottom: 15px;">Report Submitted!</h2>
+        <p style="font-size: 18px; color: var(--gray-600); margin-bottom: 30px;">Thank you for helping improve your community</p>
+        
+        <div style="background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 12px; margin-bottom: 30px;">
+          <div style="font-size: 16px; font-weight: 700; color: var(--gray-700); margin-bottom: 10px;">Your Ticket Number:</div>
+          <div id="ticketNumber" style="font-size: 32px; font-weight: 900; color: #667eea;"></div>
+        </div>
+
+        <button class="big-button primary" onclick="startOver()">
+          <span>Report Another Problem</span>
+        </button>
+
+        <button class="big-button secondary" onclick="window.location.href='track.html'">
+          <span>Track My Report</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let reportData = {
+      problem: '',
+      problemIcon: '',
+      photo: null,
+      location: '',
+      latitude: '',
+      longitude: '',
+      name: ''
+    };
+
+    function selectProblem(type, element) {
+      // Remove previous selection
+      document.querySelectorAll('.icon-button').forEach(btn => btn.classList.remove('selected'));
+      
+      // Select current
+      element.classList.add('selected');
+      
+      const labels = {
+        'pothole': 'Pothole on Road',
+        'garbage': 'Garbage Problem',
+        'streetlight': 'Street Light Not Working',
+        'water': 'Water Leakage',
+        'drainage': 'Drainage Blocked',
+        'road': 'Road Damaged',
+        'park': 'Park Maintenance',
+        'traffic': 'Traffic Problem'
+      };
+
+      const icons = {
+        'pothole': '🕳️',
+        'garbage': '🗑️',
+        'streetlight': '💡',
+        'water': '💧',
+        'drainage': '🚰',
+        'road': '🛣️',
+        'park': '🌳',
+        'traffic': '🚦'
+      };
+
+      reportData.problem = labels[type];
+      reportData.problemIcon = icons[type];
+
+      // Move to next step after short delay
+      setTimeout(() => {
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 500);
+    }
+
+    function startVoiceDescription() {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert('🎤 Voice input not supported. Please select an icon above.');
+        return;
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+
+      const voiceDiv = document.createElement('div');
+      voiceDiv.className = 'voice-recording active';
+      voiceDiv.innerHTML = '<div style="font-size: 48px; margin-bottom: 15px;">🎤</div><div style="font-size: 18px; font-weight: 700;">Listening...</div><div style="font-size: 14px; color: var(--gray-600); margin-top: 10px;">Speak now</div>';
+      document.getElementById('step1').appendChild(voiceDiv);
+
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        reportData.problem = transcript;
+        reportData.problemIcon = '🎤';
+        voiceDiv.remove();
+        
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      recognition.onerror = function() {
+        voiceDiv.remove();
+        alert('❌ Could not understand. Please try again or select an icon.');
+      };
+
+      recognition.start();
+    }
+
+    function handlePhoto(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          reportData.photo = e.target.result;
+          const preview = document.getElementById('photoPreview');
+          preview.src = e.target.result;
+          preview.classList.remove('hidden');
+          
+          setTimeout(() => {
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }, 1000);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function skipPhoto() {
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step3').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function getLocation() {
+      const btn = event.target;
+      btn.innerHTML = '<span class="spinner"></span> Getting Location...';
+      btn.disabled = true;
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            reportData.latitude = position.coords.latitude;
+            reportData.longitude = position.coords.longitude;
+            reportData.location = `${reportData.latitude.toFixed(6)}, ${reportData.longitude.toFixed(6)}`;
+
+            document.getElementById('locationDisplay').classList.remove('hidden');
+            document.getElementById('locationCoords').textContent = reportData.location;
+
+            setTimeout(() => {
+              document.getElementById('step3').classList.add('hidden');
+              document.getElementById('step4').classList.remove('hidden');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 1500);
+          },
+          function() {
+            btn.disabled = false;
+            btn.innerHTML = '<span style="font-size: 32px;">📍</span><span>Get My Location</span>';
+            alert('❌ Could not get location. Please enable location services.');
+          }
+        );
+      } else {
+        alert('❌ Location not supported on this device.');
+      }
+    }
+
+    function startVoiceName() {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert('🎤 Voice input not supported.');
+        return;
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+
+      const voiceDiv = document.createElement('div');
+      voiceDiv.className = 'voice-recording active';
+      voiceDiv.innerHTML = '<div style="font-size: 48px; margin-bottom: 15px;">🎤</div><div style="font-size: 18px; font-weight: 700;">Listening...</div>';
+      document.getElementById('step4').appendChild(voiceDiv);
+
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('nameInput').value = transcript;
+        reportData.name = transcript;
+        voiceDiv.remove();
+        
+        setTimeout(() => {
+          document.getElementById('step4').classList.add('hidden');
+          document.getElementById('step5').classList.remove('hidden');
+          showReview();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 500);
+      };
+
+      recognition.onerror = function() {
+        voiceDiv.remove();
+      };
+
+      recognition.start();
+    }
+
+    function skipName() {
+      reportData.name = document.getElementById('nameInput').value || 'Anonymous';
+      document.getElementById('step4').classList.add('hidden');
+      document.getElementById('step5').classList.remove('hidden');
+      showReview();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showReview() {
+      const review = `
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding: 15px; background: white; border-radius: 10px;">
+          <div style="font-size: 40px;">${reportData.problemIcon}</div>
+          <div>
+            <div style="font-weight: 700; color: var(--gray-800);">Problem:</div>
+            <div style="color: var(--gray-600);">${reportData.problem}</div>
+          </div>
+        </div>
+        ${reportData.photo ? `<div style="margin-bottom: 15px;"><img src="${reportData.photo}" style="width: 100%; border-radius: 10px;"></div>` : ''}
+        <div style="padding: 15px; background: white; border-radius: 10px; margin-bottom: 15px;">
+          <div style="font-weight: 700; color: var(--gray-800); margin-bottom: 5px;">📍 Location:</div>
+          <div style="color: var(--gray-600); font-size: 14px;">${reportData.location}</div>
+        </div>
+        <div style="padding: 15px; background: white; border-radius: 10px;">
+          <div style="font-weight: 700; color: var(--gray-800); margin-bottom: 5px;">👤 Name:</div>
+          <div style="color: var(--gray-600);">${reportData.name}</div>
+        </div>
+      `;
+      document.getElementById('reviewContent').innerHTML = review;
+    }
+
+    function submitReport() {
+      const btn = event.target;
+      btn.innerHTML = '<span class="spinner"></span> Submitting...';
+      btn.disabled = true;
+
+      // Simulate submission
+      setTimeout(() => {
+        const ticketId = 'CS-' + Math.floor(100000 + Math.random() * 900000);
+        document.getElementById('ticketNumber').textContent = ticketId;
+        
+        document.getElementById('step5').classList.add('hidden');
+        document.getElementById('successScreen').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 2000);
+    }
+
+    function startOver() {
+      reportData = { problem: '', problemIcon: '', photo: null, location: '', latitude: '', longitude: '', name: '' };
+      
+      document.querySelectorAll('.simple-step').forEach(step => step.classList.add('hidden'));
+      document.getElementById('step1').classList.remove('hidden');
+      document.getElementById('photoPreview').classList.add('hidden');
+      document.getElementById('locationDisplay').classList.add('hidden');
+      document.getElementById('nameInput').value = '';
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+
+</body>
+
+</html>

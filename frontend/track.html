@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Complaint - CivicSense</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="logo.svg" alt="CivicSense Logo">
+      <span>CivicSense</span>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Report Issue</a>
+      <a href="track.html" class="active">Track Complaint</a>
+      <a href="map.html">Map View</a>
+      <a href="dashboard.html">Analytics</a>
+      <a href="notifications.html">🔔</a>
+      <a href="settings.html">⚙️</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section with Background -->
+  <div class="hero-section hero-track">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1>🔍 Track Your Complaint</h1>
+      <p>Enter your ticket ID, phone number, or email to track complaint status and see real-time updates</p>
+    </div>
+  </div>
+
+  <!-- Track Container -->
+  <div class="container">
+
+    <!-- Search Options -->
+    <div class="filter-chips" style="margin-bottom: 24px; justify-content: center;">
+      <div class="filter-chip active" onclick="switchTrackMode('ticket')">🎫 Ticket ID</div>
+      <div class="filter-chip" onclick="switchTrackMode('phone')">📱 Phone Number</div>
+      <div class="filter-chip" onclick="switchTrackMode('email')">📧 Email</div>
+    </div>
+
+    <!-- Demo Button -->
+    <div style="text-align: center; margin-bottom: 24px;">
+      <button class="btn-outline-primary btn-pill" onclick="loadDemoComplaint()" style="font-size: 14px; padding: 10px 24px;">
+        ✨ Try Demo Complaint
+      </button>
+      <p style="font-size: 13px; color: var(--gray-500); margin-top: 8px;">
+        See how tracking works with sample data
+      </p>
+    </div>
+
+    <!-- Search Form -->
+    <form id="trackForm" onsubmit="event.preventDefault(); trackComplaint();">
+      
+      <!-- Ticket ID Input -->
+      <div class="form-group" id="ticketInput">
+        <label class="form-label" for="ticketId">Ticket ID</label>
+        <input 
+          type="text" 
+          id="ticketId" 
+          placeholder="e.g., CS-123456" 
+          style="text-transform: uppercase;"
+        >
+      </div>
+
+      <!-- Phone Input -->
+      <div class="form-group" id="phoneInput" style="display: none;">
+        <label class="form-label" for="phone">Phone Number</label>
+        <input 
+          type="tel" 
+          id="phone" 
+          placeholder="e.g., +1234567890"
+        >
+      </div>
+
+      <!-- Email Input -->
+      <div class="form-group" id="emailInput" style="display: none;">
+        <label class="form-label" for="email">Email Address</label>
+        <input 
+          type="email" 
+          id="email" 
+          placeholder="e.g., you@example.com"
+        >
+      </div>
+
+      <!-- Track Button -->
+      <button type="submit" class="btn-primary" style="width: 100%; padding: 16px; font-size: 16px; font-weight: 700;">
+        <span id="trackText">🔍 Track Complaint</span>
+        <span id="trackLoader" style="display: none;" class="spinner"></span>
+      </button>
+
+    </form>
+
+    <!-- Results Container -->
+    <div id="trackResults" style="display: none; margin-top: 32px;"></div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <img src="logo.svg" alt="CivicSense" height="32">
+        <span>CivicSense</span>
+      </div>
+      <div class="footer-links">
+        <a href="index.html">Report Issue</a>
+        <a href="track.html">Track</a>
+        <a href="map.html">Map</a>
+        <a href="dashboard.html">Analytics</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 CivicSense. Making cities smarter, one report at a time. 🏙️</p>
+    </div>
+  </footer>
+
+  <script src="auth.js"></script>
+  <script>
+    let trackMode = 'ticket';
+
+    // Demo complaint data
+    const demoComplaint = {
+      ticketId: 'CS-123456',
+      name: 'John Doe',
+      phone: '+1234567890',
+      email: 'john@example.com',
+      issue: 'Large Pothole on Main Street causing traffic issues',
+      location: 'Main Street, Downtown, Patna',
+      department: 'Road Department',
+      status: 'In Progress',
+      priority: 'High',
+      upvotes: 15,
+      photo: null,
+      submittedDate: '2024-01-15',
+      updatedDate: '2024-01-16',
+      estimatedResolution: '2024-01-20',
+      assignedTo: 'Road Maintenance Team',
+      comments: [
+        { date: '2024-01-15T10:30:00', text: 'Complaint received and verified', by: 'System' },
+        { date: '2024-01-15T14:20:00', text: 'Assigned to Road Department', by: 'Admin' },
+        { date: '2024-01-16T09:15:00', text: 'Team dispatched to location for assessment', by: 'Road Dept' },
+        { date: '2024-01-16T15:45:00', text: 'Materials ordered for repair work', by: 'Road Dept' }
+      ]
+    };
+
+    function loadDemoComplaint() {
+      // Fill in the demo ticket ID
+      document.getElementById('ticketId').value = 'CS-123456';
+      
+      // Show a notification
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        z-index: 10000;
+        animation: slideInRight 0.4s ease;
+        font-weight: 600;
+      `;
+      notification.innerHTML = '✨ Demo complaint loaded! Click "Track Complaint" to see it.';
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.4s ease';
+        setTimeout(() => notification.remove(), 400);
+      }, 3000);
+
+      // Scroll to form
+      document.getElementById('trackForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function switchTrackMode(mode) {
+      trackMode = mode;
+      
+      // Update chips
+      document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // Show/hide inputs
+      document.getElementById('ticketInput').style.display = mode === 'ticket' ? 'block' : 'none';
+      document.getElementById('phoneInput').style.display = mode === 'phone' ? 'block' : 'none';
+      document.getElementById('emailInput').style.display = mode === 'email' ? 'block' : 'none';
+
+      // Clear results
+      document.getElementById('trackResults').style.display = 'none';
+    }
+
+    function trackComplaint() {
+      const trackText = document.getElementById('trackText');
+      const trackLoader = document.getElementById('trackLoader');
+      const submitBtn = document.querySelector('button[type="submit"]');
+
+      // Get search value
+      let searchValue = '';
+      if (trackMode === 'ticket') {
+        searchValue = document.getElementById('ticketId').value.toUpperCase();
+      } else if (trackMode === 'phone') {
+        searchValue = document.getElementById('phone').value;
+      } else {
+        searchValue = document.getElementById('email').value;
+      }
+
+      if (!searchValue) {
+        alert('⚠️ Please enter a value to track');
+        return;
+      }
+
+      // Show loading
+      trackText.style.display = 'none';
+      trackLoader.style.display = 'inline-block';
+      submitBtn.disabled = true;
+
+      // Simulate API call (replace with actual backend call)
+      setTimeout(() => {
+        // Use demo data if searching for demo ticket
+        const mockComplaints = [demoComplaint];
+
+        // Find matching complaint
+        let complaint = null;
+        if (trackMode === 'ticket') {
+          complaint = mockComplaints.find(c => c.ticketId === searchValue);
+        } else if (trackMode === 'phone') {
+          complaint = mockComplaints.find(c => c.phone === searchValue);
+        } else {
+          complaint = mockComplaints.find(c => c.email === searchValue);
+        }
+
+        // Restore button
+        trackText.style.display = 'inline';
+        trackLoader.style.display = 'none';
+        submitBtn.disabled = false;
+
+        if (complaint) {
+          displayComplaintDetails(complaint);
+        } else {
+          document.getElementById('trackResults').innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">🔍</div>
+              <h3>No Complaint Found</h3>
+              <p>We couldn't find any complaint matching your search. Please check and try again.</p>
+            </div>
+          `;
+          document.getElementById('trackResults').style.display = 'block';
+        }
+      }, 1500);
+    }
+
+    function displayComplaintDetails(complaint) {
+      const statusClass = complaint.status === 'Pending' ? 'badge-pending' : 
+                         complaint.status === 'In Progress' ? 'badge-progress' : 'badge-resolved';
+      const priorityClass = complaint.priority === 'High' ? 'badge-high' : 'badge-normal';
+
+      const html = `
+        <div class="track-result-card">
+          
+          <!-- Header -->
+          <div class="track-header">
+            <div>
+              <h2 style="margin: 0 0 8px 0; font-size: 24px; color: var(--gray-800);">
+                ${complaint.issue}
+              </h2>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <span class="complaint-id">${complaint.ticketId}</span>
+                <span class="badge ${statusClass}">${complaint.status}</span>
+                <span class="badge ${priorityClass}">${complaint.priority} Priority</span>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 32px; margin-bottom: 8px;">👍</div>
+              <div style="font-size: 14px; font-weight: 700; color: #667eea;">${complaint.upvotes} Upvotes</div>
+              <button class="btn-secondary btn-small" onclick="upvoteComplaint('${complaint.ticketId}')" style="margin-top: 8px;">
+                👍 Upvote
+              </button>
+            </div>
+          </div>
+
+          <!-- Progress Tracker -->
+          <div class="progress-tracker" style="margin: 32px 0;">
+            <div class="progress-step completed">
+              <div class="progress-step-circle">✓</div>
+              <div class="progress-step-label">Submitted</div>
+            </div>
+            <div class="progress-step ${complaint.status !== 'Pending' ? 'completed' : ''}">
+              <div class="progress-step-circle">${complaint.status !== 'Pending' ? '✓' : '2'}</div>
+              <div class="progress-step-label">Assigned</div>
+            </div>
+            <div class="progress-step ${complaint.status === 'In Progress' ? 'active' : complaint.status === 'Resolved' ? 'completed' : ''}">
+              <div class="progress-step-circle">${complaint.status === 'Resolved' ? '✓' : complaint.status === 'In Progress' ? '🔄' : '3'}</div>
+              <div class="progress-step-label">In Progress</div>
+            </div>
+            <div class="progress-step ${complaint.status === 'Resolved' ? 'completed' : ''}">
+              <div class="progress-step-circle">${complaint.status === 'Resolved' ? '✓' : '4'}</div>
+              <div class="progress-step-label">Resolved</div>
+            </div>
+          </div>
+
+          <!-- Details Grid -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 24px 0;">
+            <div class="info-card">
+              <div class="info-card-header">
+                <span class="info-card-icon">📍</span>
+                <span class="info-card-title">Location</span>
+              </div>
+              <div class="info-card-content">${complaint.location}</div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-card-header">
+                <span class="info-card-icon">🏢</span>
+                <span class="info-card-title">Department</span>
+              </div>
+              <div class="info-card-content">${complaint.department}</div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-card-header">
+                <span class="info-card-icon">👥</span>
+                <span class="info-card-title">Assigned To</span>
+              </div>
+              <div class="info-card-content">${complaint.assignedTo}</div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-card-header">
+                <span class="info-card-icon">📅</span>
+                <span class="info-card-title">Submitted</span>
+              </div>
+              <div class="info-card-content">${new Date(complaint.submittedDate).toLocaleDateString()}</div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-card-header">
+                <span class="info-card-icon">🔄</span>
+                <span class="info-card-title">Last Updated</span>
+              </div>
+              <div class="info-card-content">${new Date(complaint.updatedDate).toLocaleDateString()}</div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-card-header">
+                <span class="info-card-icon">⏰</span>
+                <span class="info-card-title">Est. Resolution</span>
+              </div>
+              <div class="info-card-content">${new Date(complaint.estimatedResolution).toLocaleDateString()}</div>
+            </div>
+          </div>
+
+          <!-- Activity Timeline -->
+          <div style="margin-top: 32px;">
+            <h3 style="font-size: 18px; font-weight: 700; color: var(--gray-800); margin-bottom: 20px;">
+              📋 Activity Timeline
+            </h3>
+            <div class="activity-timeline">
+              ${complaint.comments.map(comment => `
+                <div class="activity-item">
+                  <div class="activity-icon">💬</div>
+                  <div class="activity-content">
+                    <h4>${comment.text}</h4>
+                    <p>By: ${comment.by}</p>
+                    <span class="activity-time">⏰ ${new Date(comment.date).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div style="display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap;">
+            <button class="btn-primary" onclick="shareComplaint('${complaint.ticketId}')">
+              📤 Share
+            </button>
+            <button class="btn-secondary" onclick="printComplaint()">
+              🖨️ Print
+            </button>
+            <button class="btn-secondary" onclick="downloadPDF('${complaint.ticketId}')">
+              📄 Download PDF
+            </button>
+          </div>
+
+        </div>
+      `;
+
+      document.getElementById('trackResults').innerHTML = html;
+      document.getElementById('trackResults').style.display = 'block';
+      document.getElementById('trackResults').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function upvoteComplaint(ticketId) {
+      alert(`✅ You've upvoted complaint ${ticketId}! Your support helps prioritize this issue.`);
+      // Implement actual upvote logic
+    }
+
+    function shareComplaint(ticketId) {
+      if (navigator.share) {
+        navigator.share({
+          title: 'CivicSense Complaint',
+          text: `Track my complaint: ${ticketId}`,
+          url: window.location.href
+        });
+      } else {
+        alert(`Share this link: ${window.location.href}?ticket=${ticketId}`);
+      }
+    }
+
+    function printComplaint() {
+      window.print();
+    }
+
+    function downloadPDF(ticketId) {
+      alert(`📄 PDF download for ${ticketId} will be available soon!`);
+    }
+  </script>
+
+</body>
+
+</html>

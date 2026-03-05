@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - CivicSense</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- Login Container -->
+  <div class="auth-container">
+    
+    <!-- Logo and Branding -->
+    <div class="auth-logo">
+      <div class="logo-icon">🏙️</div>
+      <h1>CivicSense</h1>
+      <p>Smart Civic Issue Reporting Platform</p>
+    </div>
+
+    <!-- Login Form -->
+    <div class="auth-card">
+      <h2>Welcome Back</h2>
+      <p class="auth-subtitle">Sign in to your account to continue</p>
+
+      <form id="loginForm" onsubmit="event.preventDefault(); handleLogin();">
+        
+        <!-- Email Input -->
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input 
+            type="email" 
+            id="email" 
+            placeholder="you@example.com" 
+            required
+          >
+        </div>
+
+        <!-- Password Input -->
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input 
+            type="password" 
+            id="password" 
+            placeholder="Enter your password" 
+            required
+          >
+        </div>
+
+        <!-- Remember Me & Forgot Password -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
+            <input type="checkbox" id="remember" style="width: auto; margin: 0;">
+            <span>Remember me</span>
+          </label>
+          <a href="#" style="font-size: 14px; color: #667eea; text-decoration: none; font-weight: 600;">Forgot password?</a>
+        </div>
+
+        <!-- Login Button -->
+        <button type="submit" class="btn-primary" style="width: 100%; padding: 16px; font-size: 16px; font-weight: 700;">
+          <span id="loginText">🔐 Sign In</span>
+          <span id="loginLoader" style="display: none;" class="spinner"></span>
+        </button>
+
+      </form>
+
+      <!-- Divider -->
+      <div class="divider" style="margin: 28px 0;"></div>
+
+      <!-- Sign Up Link -->
+      <p style="text-align: center; font-size: 14px; color: var(--gray-600);">
+        Don't have an account? 
+        <a href="signup.html" style="color: #667eea; text-decoration: none; font-weight: 700;">Sign up</a>
+      </p>
+
+      <!-- Quick Access -->
+      <div style="margin-top: 24px; padding: 16px; background: rgba(102, 126, 234, 0.05); border-radius: 12px; border: 1px solid rgba(102, 126, 234, 0.1);">
+        <p style="font-size: 13px; color: var(--gray-600); margin-bottom: 8px; font-weight: 600;">Quick Access:</p>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button onclick="quickLogin('citizen')" class="btn-secondary btn-small">👤 Citizen</button>
+          <button onclick="quickLogin('admin')" class="btn-secondary btn-small">🛠️ Admin</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer Links -->
+    <div class="auth-footer">
+      <a href="index.html">Report Issue</a>
+      <span>•</span>
+      <a href="map.html">View Map</a>
+      <span>•</span>
+      <a href="dashboard.html">Analytics</a>
+    </div>
+
+  </div>
+
+  <script>
+    // Handle login
+    function handleLogin() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const remember = document.getElementById('remember').checked;
+
+      const loginText = document.getElementById('loginText');
+      const loginLoader = document.getElementById('loginLoader');
+      const submitBtn = document.querySelector('button[type="submit"]');
+
+      // Show loading
+      loginText.style.display = 'none';
+      loginLoader.style.display = 'inline-block';
+      submitBtn.disabled = true;
+
+      // Simulate login (replace with actual API call)
+      setTimeout(() => {
+        // Store user session
+        const user = {
+          email: email,
+          role: email.includes('admin') ? 'admin' : 'citizen',
+          name: email.split('@')[0],
+          loginTime: new Date().toISOString()
+        };
+
+        localStorage.setItem('civicSenseUser', JSON.stringify(user));
+        if (remember) {
+          localStorage.setItem('rememberMe', 'true');
+        }
+
+        // Redirect based on role
+        if (user.role === 'admin') {
+          window.location.href = 'admin.html';
+        } else {
+          window.location.href = 'index.html';
+        }
+      }, 1500);
+    }
+
+    // Quick login for demo
+    function quickLogin(role) {
+      const user = {
+        email: role === 'admin' ? 'admin@civicsense.com' : 'citizen@civicsense.com',
+        role: role,
+        name: role.charAt(0).toUpperCase() + role.slice(1),
+        loginTime: new Date().toISOString()
+      };
+
+      localStorage.setItem('civicSenseUser', JSON.stringify(user));
+
+      if (role === 'admin') {
+        window.location.href = 'admin.html';
+      } else {
+        window.location.href = 'index.html';
+      }
+    }
+
+    // Check if already logged in
+    window.addEventListener('DOMContentLoaded', function() {
+      const user = localStorage.getItem('civicSenseUser');
+      if (user) {
+        const userData = JSON.parse(user);
+        if (userData.role === 'admin') {
+          window.location.href = 'admin.html';
+        } else {
+          window.location.href = 'index.html';
+        }
+      }
+    });
+  </script>
+
+</body>
+
+</html>

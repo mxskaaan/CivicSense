@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications - CivicSense</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="logo.svg" alt="CivicSense Logo">
+      <span>CivicSense</span>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Report Issue</a>
+      <a href="admin.html">Admin Dashboard</a>
+      <a href="map.html">Map View</a>
+      <a href="dashboard.html">Analytics</a>
+      <a href="notifications.html" class="active notification-dot">Notifications</a>
+    </div>
+  </nav>
+
+  <!-- Dashboard Content -->
+  <div class="dashboard-content">
+
+    <!-- Dashboard Header with Background -->
+    <div class="dashboard-header-hero hero-notifications">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1>🔔 Notifications Center</h1>
+        <p>Stay updated with real-time alerts and complaint status changes</p>
+        <div style="display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; justify-content: center;">
+          <button class="btn-primary btn-small" onclick="markAllRead()" style="background: white; color: #667eea;">✓ Mark All Read</button>
+          <button class="btn-secondary btn-small" onclick="filterNotifications('all')" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white;">All</button>
+          <button class="btn-secondary btn-small" onclick="filterNotifications('unread')" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white;">Unread</button>
+          <button class="btn-secondary btn-small" onclick="filterNotifications('important')" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white;">Important</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div id="notificationsList" class="notifications-container"></div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <img src="logo.svg" alt="CivicSense" height="32">
+        <span>CivicSense</span>
+      </div>
+      <div class="footer-links">
+        <a href="index.html">Report Issue</a>
+        <a href="admin.html">Admin</a>
+        <a href="map.html">Map</a>
+        <a href="dashboard.html">Analytics</a>
+      </div>
+      <div class="footer-social">
+        <a href="#" title="Instagram">📷</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 CivicSense. Making cities smarter, one report at a time. 🏙️</p>
+    </div>
+  </footer>
+
+  <script src="auth.js"></script>
+  <script>
+    // Sample notifications data
+    const notifications = [
+      {
+        id: 1,
+        type: 'success',
+        icon: '✅',
+        title: 'Complaint Resolved',
+        message: 'Your complaint #CS-123456 about pothole on Main Street has been resolved.',
+        time: '2 minutes ago',
+        read: false,
+        important: true
+      },
+      {
+        id: 2,
+        type: 'info',
+        icon: '🔄',
+        title: 'Status Update',
+        message: 'Complaint #CS-123455 is now in progress. Our team is working on it.',
+        time: '1 hour ago',
+        read: false,
+        important: false
+      },
+      {
+        id: 3,
+        type: 'warning',
+        icon: '⚠️',
+        title: 'High Priority Alert',
+        message: 'New high-priority complaint reported in your area: Broken streetlight.',
+        time: '3 hours ago',
+        read: true,
+        important: true
+      },
+      {
+        id: 4,
+        type: 'info',
+        icon: '📝',
+        title: 'New Comment',
+        message: 'Admin added a comment on your complaint #CS-123454.',
+        time: '5 hours ago',
+        read: true,
+        important: false
+      },
+      {
+        id: 5,
+        type: 'success',
+        icon: '🎉',
+        title: 'Complaint Submitted',
+        message: 'Your complaint has been successfully submitted. Ticket ID: CS-123457',
+        time: '1 day ago',
+        read: true,
+        important: false
+      },
+      {
+        id: 6,
+        type: 'info',
+        icon: '📊',
+        title: 'Weekly Report',
+        message: 'Your area had 15 complaints this week. 10 resolved, 5 in progress.',
+        time: '2 days ago',
+        read: true,
+        important: false
+      }
+    ];
+
+    let currentFilter = 'all';
+
+    function displayNotifications(filter = 'all') {
+      let filtered = notifications;
+
+      if (filter === 'unread') {
+        filtered = notifications.filter(n => !n.read);
+      } else if (filter === 'important') {
+        filtered = notifications.filter(n => n.important);
+      }
+
+      const container = document.getElementById('notificationsList');
+      
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🔔</div>
+            <h3>No notifications</h3>
+            <p>You're all caught up!</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(notif => `
+        <div class="notification-card ${notif.read ? 'read' : 'unread'} ${notif.type}" onclick="markAsRead(${notif.id})">
+          <div class="notification-icon">${notif.icon}</div>
+          <div class="notification-content">
+            <div class="notification-header">
+              <h3>${notif.title}</h3>
+              ${notif.important ? '<span class="badge badge-high">Important</span>' : ''}
+              ${!notif.read ? '<span class="unread-dot"></span>' : ''}
+            </div>
+            <p>${notif.message}</p>
+            <span class="notification-time">⏰ ${notif.time}</span>
+          </div>
+          <button class="notification-action" onclick="event.stopPropagation(); deleteNotification(${notif.id})">
+            🗑️
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function markAsRead(id) {
+      const notif = notifications.find(n => n.id === id);
+      if (notif) {
+        notif.read = true;
+        displayNotifications(currentFilter);
+      }
+    }
+
+    function markAllRead() {
+      notifications.forEach(n => n.read = true);
+      displayNotifications(currentFilter);
+      alert('✓ All notifications marked as read');
+    }
+
+    function deleteNotification(id) {
+      const index = notifications.findIndex(n => n.id === id);
+      if (index > -1) {
+        notifications.splice(index, 1);
+        displayNotifications(currentFilter);
+      }
+    }
+
+    function filterNotifications(filter) {
+      currentFilter = filter;
+      displayNotifications(filter);
+      
+      // Update button styles
+      document.querySelectorAll('.btn-secondary').forEach(btn => {
+        btn.style.background = 'rgba(255, 255, 255, 0.9)';
+      });
+      event.target.style.background = 'rgba(102, 126, 234, 0.2)';
+    }
+
+    // Initial load
+    displayNotifications();
+
+    // Simulate real-time notifications
+    setInterval(() => {
+      const randomTypes = ['success', 'info', 'warning'];
+      const randomIcons = ['✅', '🔄', '⚠️', '📝', '🎉'];
+      const randomTitles = ['New Update', 'Status Changed', 'Alert', 'Reminder'];
+      
+      // Uncomment to enable random notifications
+      // const newNotif = {
+      //   id: Date.now(),
+      //   type: randomTypes[Math.floor(Math.random() * randomTypes.length)],
+      //   icon: randomIcons[Math.floor(Math.random() * randomIcons.length)],
+      //   title: randomTitles[Math.floor(Math.random() * randomTitles.length)],
+      //   message: 'This is a real-time notification update.',
+      //   time: 'Just now',
+      //   read: false,
+      //   important: Math.random() > 0.7
+      // };
+      // notifications.unshift(newNotif);
+      // displayNotifications(currentFilter);
+    }, 30000);
+  </script>
+
+</body>
+
+</html>

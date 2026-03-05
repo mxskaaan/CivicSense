@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics - CivicSense</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="logo.svg" alt="CivicSense Logo">
+      <span>CivicSense</span>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Report Issue</a>
+      <a href="admin.html">Admin Dashboard</a>
+      <a href="map.html">Map View</a>
+      <a href="dashboard.html" class="active">Analytics</a>
+    </div>
+  </nav>
+
+  <!-- Dashboard Content -->
+  <div class="dashboard-content">
+
+    <!-- Dashboard Header with Background -->
+    <div class="dashboard-header-hero">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1>📊 Analytics Dashboard</h1>
+        <p>Real-time insights and statistics about civic complaints in your community.</p>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats">
+      
+      <!-- Total Complaints Card -->
+      <div class="card" style="animation-delay: 0.1s;">
+        <div class="card-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          📋
+        </div>
+        <h3>Total Complaints</h3>
+        <h2 id="total">0</h2>
+        <p style="margin-top: 8px; font-size: 13px; color: var(--gray-500);">All time</p>
+      </div>
+
+      <!-- Pending Card -->
+      <div class="card" style="animation-delay: 0.2s;">
+        <div class="card-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+          ⏳
+        </div>
+        <h3>Pending</h3>
+        <h2 id="pending" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">0</h2>
+        <p style="margin-top: 8px; font-size: 13px; color: var(--gray-500);">Awaiting action</p>
+      </div>
+
+      <!-- In Progress Card -->
+      <div class="card" style="animation-delay: 0.3s;">
+        <div class="card-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+          🔄
+        </div>
+        <h3>In Progress</h3>
+        <h2 id="inProgress" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">0</h2>
+        <p style="margin-top: 8px; font-size: 13px; color: var(--gray-500);">Being worked on</p>
+      </div>
+
+      <!-- Resolved Card -->
+      <div class="card" style="animation-delay: 0.4s;">
+        <div class="card-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+          ✅
+        </div>
+        <h3>Resolved</h3>
+        <h2 id="resolved" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">0</h2>
+        <p style="margin-top: 8px; font-size: 13px; color: var(--gray-500);">Completed</p>
+      </div>
+
+    </div>
+
+    <!-- Additional Stats -->
+    <div class="stats" style="margin-top: 24px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+      
+      <!-- High Priority Card -->
+      <div class="card" style="animation-delay: 0.5s;">
+        <div class="card-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+          🚨
+        </div>
+        <h3>High Priority</h3>
+        <h2 id="highPriority" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">0</h2>
+        <p style="margin-top: 8px; font-size: 13px; color: var(--gray-500);">Urgent issues</p>
+      </div>
+
+      <!-- Resolution Rate Card -->
+      <div class="card" style="animation-delay: 0.6s;">
+        <div class="card-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+          📈
+        </div>
+        <h3>Resolution Rate</h3>
+        <h2 id="resolutionRate" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">0%</h2>
+        <p style="margin-top: 8px; font-size: 13px; color: var(--gray-500);">Success rate</p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <img src="logo.svg" alt="CivicSense" height="32">
+        <span>CivicSense</span>
+      </div>
+      <div class="footer-links">
+        <a href="index.html">Report Issue</a>
+        <a href="admin.html">Admin</a>
+        <a href="map.html">Map</a>
+        <a href="dashboard.html">Analytics</a>
+      </div>
+      <div class="footer-social">
+        <a href="#" title="Instagram">📷</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 CivicSense. Making cities smarter, one report at a time. 🏙️</p>
+    </div>
+  </footer>
+
+  <script src="auth.js"></script>
+  <script>
+    // Fetch and display analytics
+    fetch("http://localhost:5000/complaints")
+      .then(res => res.json())
+      .then(data => {
+        
+        // Calculate statistics
+        const total = data.length;
+        const pending = data.filter(c => c.status === "Pending").length;
+        const inProgress = data.filter(c => c.status === "In Progress").length;
+        const resolved = data.filter(c => c.status === "Resolved").length;
+        const highPriority = data.filter(c => c.priority === "High").length;
+        
+        // Calculate resolution rate
+        const resolutionRate = total > 0 ? Math.round((resolved / total) * 100) : 0;
+
+        // Update DOM
+        document.getElementById("total").innerText = total;
+        document.getElementById("pending").innerText = pending;
+        document.getElementById("inProgress").innerText = inProgress;
+        document.getElementById("resolved").innerText = resolved;
+        document.getElementById("highPriority").innerText = highPriority;
+        document.getElementById("resolutionRate").innerText = resolutionRate + "%";
+
+        // Add animation
+        animateNumbers();
+      })
+      .catch(err => {
+        console.error("Error loading analytics:", err);
+      });
+
+    // Animate numbers counting up
+    function animateNumbers() {
+      const counters = document.querySelectorAll('.card h2');
+      
+      counters.forEach(counter => {
+        const target = counter.innerText.replace('%', '');
+        const isPercentage = counter.innerText.includes('%');
+        const increment = Math.ceil(target / 50);
+        let current = 0;
+
+        const updateCounter = () => {
+          if (current < target) {
+            current += increment;
+            if (current > target) current = target;
+            counter.innerText = current + (isPercentage ? '%' : '');
+            setTimeout(updateCounter, 20);
+          }
+        };
+
+        counter.innerText = '0' + (isPercentage ? '%' : '');
+        updateCounter();
+      });
+    }
+
+    // Mark current page as active
+    document.addEventListener('DOMContentLoaded', function() {
+      const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+      document.querySelectorAll('.nav-links a').forEach(link => {
+        if (link.getAttribute('href') === currentPage) {
+          link.classList.add('active');
+        }
+      });
+    });
+
+    // Auto refresh every 60 seconds
+    setInterval(() => {
+      location.reload();
+    }, 60000);
+  </script>
+
+</body>
+
+</html>
