@@ -7,15 +7,24 @@ const Complaint = require("./complaintModel");
 
 const app = express();
 
+/* middleware */
+
 app.use(cors());
 app.use(express.json());
 
 app.use("/uploads", express.static("uploads"));
 
-mongoose.connect("YOUR_MONGODB_ATLAS_URL",{
+/* MongoDB connection */
+
+mongoose.connect(
+"mongodb+srv://civicsense:MKDigital%40153@cluster0.vgrfm6d.mongodb.net/civicsense?retryWrites=true&w=majority",
+{
 useNewUrlParser:true,
 useUnifiedTopology:true
-});
+}
+)
+.then(()=>console.log("MongoDB Connected"))
+.catch(err=>console.log(err));
 
 /* file upload */
 
@@ -43,23 +52,22 @@ let issueText = req.body.issue.toLowerCase();
 
 let priority = "Normal";
 
-if(issueText.includes("hospital") ||
+if(
+issueText.includes("hospital") ||
 issueText.includes("school") ||
 issueText.includes("accident") ||
-issueText.includes("fire")){
-
+issueText.includes("fire")
+){
 priority = "High";
-
 }
 
-/* generate ticket id */
+/* ticket id */
 
 let ticketId = "CS-" + Math.floor(100000 + Math.random()*900000);
 
 const complaint = new Complaint({
 
 ticketId:ticketId,
-
 name:req.body.name,
 issue:req.body.issue,
 location:req.body.location,
@@ -79,6 +87,7 @@ res.send("Complaint submitted. Ticket ID: " + ticketId);
 
 catch(err){
 
+console.log(err);
 res.status(500).send("Error saving complaint");
 
 }
@@ -89,9 +98,18 @@ res.status(500).send("Error saving complaint");
 
 app.get("/complaints",async(req,res)=>{
 
-const complaints = await Complaint.find();
+try{
 
+const complaints = await Complaint.find().sort({_id:-1});
 res.json(complaints);
+
+}
+
+catch(err){
+
+res.status(500).send("Error fetching complaints");
+
+}
 
 });
 
@@ -99,16 +117,36 @@ res.json(complaints);
 
 app.post("/updateStatus",async(req,res)=>{
 
+try{
+
 await Complaint.findByIdAndUpdate(req.body.id,{
 status:req.body.status
 });
 
 res.send("Status Updated");
 
+}
+
+catch(err){
+
+res.status(500).send("Error updating status");
+
+}
+
 });
 
-app.listen(5000,()=>{
+/* root route */
 
-console.log("Server running on port 5000");
+app.get("/",(req,res)=>{
+res.send("CivicSense Backend Running");
+});
+
+/* server */
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT,()=>{
+
+console.log("Server running on port " + PORT);
 
 });
