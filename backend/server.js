@@ -7,14 +7,13 @@ const Complaint = require("./complaintModel");
 
 const app = express();
 
-/* middleware */
+/* ---------------- Middleware ---------------- */
 
 app.use(cors());
 app.use(express.json());
-
 app.use("/uploads", express.static("uploads"));
 
-/* MongoDB connection */
+/* ---------------- MongoDB Connection ---------------- */
 
 mongoose.connect(
 "mongodb+srv://civicsense:MKDigital%40153@cluster0.vgrfm6d.mongodb.net/civicsense?retryWrites=true&w=majority",
@@ -24,9 +23,9 @@ useUnifiedTopology:true
 }
 )
 .then(()=>console.log("MongoDB Connected"))
-.catch(err=>console.log(err));
+.catch(err=>console.log("MongoDB Error:",err));
 
-/* file upload */
+/* ---------------- File Upload Setup ---------------- */
 
 const storage = multer.diskStorage({
 
@@ -42,14 +41,19 @@ cb(null,Date.now()+"-"+file.originalname);
 
 const upload = multer({storage:storage});
 
-/* submit complaint */
+/* ---------------- Root Route ---------------- */
+
+app.get("/",(req,res)=>{
+res.send("CivicSense Backend Running");
+});
+
+/* ---------------- Submit Complaint ---------------- */
 
 app.post("/complaint",upload.single("photo"),async(req,res)=>{
 
 try{
 
 let issueText = req.body.issue.toLowerCase();
-
 let priority = "Normal";
 
 if(
@@ -58,14 +62,12 @@ issueText.includes("school") ||
 issueText.includes("accident") ||
 issueText.includes("fire")
 ){
-priority = "High";
+priority="High";
 }
 
-/* ticket id */
+let ticketId="CS-"+Math.floor(100000+Math.random()*900000);
 
-let ticketId = "CS-" + Math.floor(100000 + Math.random()*900000);
-
-const complaint = new Complaint({
+const complaint=new Complaint({
 
 ticketId:ticketId,
 name:req.body.name,
@@ -81,39 +83,36 @@ photo:req.file?req.file.filename:""
 
 await complaint.save();
 
-res.send("Complaint submitted. Ticket ID: " + ticketId);
+res.send("Complaint submitted. Ticket ID: "+ticketId);
 
-}
+}catch(err){
 
-catch(err){
-
-console.log(err);
+console.log("Complaint Save Error:",err);
 res.status(500).send("Error saving complaint");
 
 }
 
 });
 
-/* get complaints */
+/* ---------------- Get All Complaints ---------------- */
 
 app.get("/complaints",async(req,res)=>{
 
 try{
 
-const complaints = await Complaint.find().sort({_id:-1});
+const complaints=await Complaint.find({});
 res.json(complaints);
 
-}
+}catch(err){
 
-catch(err){
-
+console.log("Complaint fetch error:",err);
 res.status(500).send("Error fetching complaints");
 
 }
 
 });
 
-/* update status */
+/* ---------------- Update Complaint Status ---------------- */
 
 app.post("/updateStatus",async(req,res)=>{
 
@@ -125,28 +124,21 @@ status:req.body.status
 
 res.send("Status Updated");
 
-}
+}catch(err){
 
-catch(err){
-
+console.log("Update Status Error:",err);
 res.status(500).send("Error updating status");
 
 }
 
 });
 
-/* root route */
-
-app.get("/",(req,res)=>{
-res.send("CivicSense Backend Running");
-});
-
-/* server */
+/* ---------------- Server ---------------- */
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT,()=>{
 
-console.log("Server running on port " + PORT);
+console.log("Server running on port "+PORT);
 
 });
