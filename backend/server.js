@@ -7,16 +7,16 @@ const Complaint = require("./complaintModel");
 
 const app = express();
 
-/* ---------------- Middleware ---------------- */
+/* ---------- Middleware ---------- */
 
 app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
-/* ---------------- MongoDB Connection ---------------- */
+/* ---------- MongoDB Connection ---------- */
 
 mongoose.connect(
-"mongodb+srv://civicsense:MKDigital%40153@cluster0.vgrfm6d.mongodb.net/civicsense?retryWrites=true&w=majority",
+"mongodb+srv://civicsense:MKDigital%40153@cluster0.vgrfm6d.mongodb.net/test?retryWrites=true&w=majority",
 {
 useNewUrlParser:true,
 useUnifiedTopology:true
@@ -25,7 +25,7 @@ useUnifiedTopology:true
 .then(()=>console.log("MongoDB Connected"))
 .catch(err=>console.log("MongoDB Error:",err));
 
-/* ---------------- File Upload Setup ---------------- */
+/* ---------- File Upload ---------- */
 
 const storage = multer.diskStorage({
 
@@ -41,19 +41,20 @@ cb(null,Date.now()+"-"+file.originalname);
 
 const upload = multer({storage:storage});
 
-/* ---------------- Root Route ---------------- */
+/* ---------- Root Route ---------- */
 
 app.get("/",(req,res)=>{
 res.send("CivicSense Backend Running");
 });
 
-/* ---------------- Submit Complaint ---------------- */
+/* ---------- Submit Complaint ---------- */
 
 app.post("/complaint",upload.single("photo"),async(req,res)=>{
 
 try{
 
 let issueText = req.body.issue.toLowerCase();
+
 let priority = "Normal";
 
 if(
@@ -64,6 +65,8 @@ issueText.includes("fire")
 ){
 priority="High";
 }
+
+/* generate ticket id */
 
 let ticketId="CS-"+Math.floor(100000+Math.random()*900000);
 
@@ -94,13 +97,13 @@ res.status(500).send("Error saving complaint");
 
 });
 
-/* ---------------- Get All Complaints ---------------- */
+/* ---------- Get Complaints ---------- */
 
 app.get("/complaints",async(req,res)=>{
 
 try{
 
-const complaints=await Complaint.find({});
+const complaints = await Complaint.find({});
 res.json(complaints);
 
 }catch(err){
@@ -112,7 +115,7 @@ res.status(500).send("Error fetching complaints");
 
 });
 
-/* ---------------- Update Complaint Status ---------------- */
+/* ---------- Update Complaint Status ---------- */
 
 app.post("/updateStatus",async(req,res)=>{
 
@@ -133,7 +136,7 @@ res.status(500).send("Error updating status");
 
 });
 
-/* ---------------- Server ---------------- */
+/* ---------- Server ---------- */
 
 const PORT = process.env.PORT || 5000;
 
