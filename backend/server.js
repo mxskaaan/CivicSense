@@ -8,29 +8,27 @@ const Complaint = require("./complaintModel");
 
 const app = express();
 
-/* ---------- Middleware ---------- */
+/* ---------------- MIDDLEWARE ---------------- */
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* ---------- Static Upload Folder ---------- */
-
 app.use("/uploads", express.static("uploads"));
 
-/* ---------- MongoDB Connection ---------- */
+/* ---------------- MONGODB CONNECTION ---------------- */
 
 mongoose.connect(
-"mongodb+srv://civicsense:MKDigital%[40153@cluster0.vgrfm6d.mongodb.net](mailto:40153@cluster0.vgrfm6d.mongodb.net)/civicsense?retryWrites=true&w=majority"
+"mongodb+srv://civicsense:MKDigital%[40153@cluster0.vgrfm6d.mongodb.net](mailto:40153@cluster0.vgrfm6d.mongodb.net)/civicsense?retryWrites=true&w=majority&appName=Cluster0"
 )
 .then(() => {
 console.log("MongoDB Connected");
 })
-.catch(err => {
+.catch((err) => {
 console.log("MongoDB Error:", err);
 });
 
-/* ---------- File Upload ---------- */
+/* ---------------- FILE UPLOAD ---------------- */
 
 const storage = multer.diskStorage({
 
@@ -44,15 +42,15 @@ cb(null, Date.now() + "-" + file.originalname);
 
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
-/* ---------- Root Route ---------- */
+/* ---------------- ROOT ROUTE ---------------- */
 
 app.get("/", (req, res) => {
 res.send("CivicSense Backend Running");
 });
 
-/* ---------- Submit Complaint ---------- */
+/* ---------------- SUBMIT COMPLAINT ---------------- */
 
 app.post("/complaint", upload.single("photo"), async (req, res) => {
 
@@ -111,7 +109,7 @@ res.status(500).json({
 
 });
 
-/* ---------- Get All Complaints ---------- */
+/* ---------------- GET ALL COMPLAINTS ---------------- */
 
 app.get("/complaints", async (req, res) => {
 
@@ -138,7 +136,7 @@ res.status(500).json({
 
 });
 
-/* ---------- Update Complaint Status ---------- */
+/* ---------------- UPDATE STATUS ---------------- */
 
 app.post("/updateStatus", async (req, res) => {
 
@@ -168,7 +166,7 @@ res.status(500).json({
 
 });
 
-/* ---------- Start Server ---------- */
+/* ---------------- START SERVER ---------------- */
 
 const PORT = process.env.PORT || 5000;
 
