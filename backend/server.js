@@ -7,13 +7,13 @@ const Complaint = require("./complaintModel");
 
 const app = express();
 
-/* ---------- Middleware ---------- */
+/* ---------------- Middleware ---------------- */
 
 app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
-/* ---------- MongoDB Connection ---------- */
+/* ---------------- MongoDB Connection ---------------- */
 
 mongoose.connect(
 "mongodb+srv://civicsense:MKDigital%40153@cluster0.vgrfm6d.mongodb.net/civicsense?retryWrites=true&w=majority",
@@ -25,7 +25,7 @@ useUnifiedTopology:true
 .then(()=>console.log("MongoDB Connected"))
 .catch(err=>console.log("MongoDB Error:",err));
 
-/* ---------- File Upload ---------- */
+/* ---------------- File Upload ---------------- */
 
 const storage = multer.diskStorage({
 
@@ -41,13 +41,13 @@ cb(null,Date.now()+"-"+file.originalname);
 
 const upload = multer({storage});
 
-/* ---------- Root Route ---------- */
+/* ---------------- Root Route ---------------- */
 
 app.get("/",(req,res)=>{
 res.send("CivicSense Backend Running");
 });
 
-/* ---------- Submit Complaint ---------- */
+/* ---------------- Submit Complaint ---------------- */
 
 app.post("/complaint",upload.single("photo"),async(req,res)=>{
 
@@ -91,31 +91,31 @@ ticketId
 }catch(err){
 
 console.log("Complaint save error:",err);
-res.status(500).send("Error saving complaint");
+res.status(500).json(err);
 
 }
 
 });
 
-/* ---------- Get Complaints ---------- */
+/* ---------------- Get Complaints ---------------- */
 
 app.get("/complaints",async(req,res)=>{
 
 try{
 
-const complaints=await Complaint.find({});
+const complaints = await Complaint.find({});
 res.json(complaints);
 
 }catch(err){
 
-console.log("Fetch error:",err);
-res.status(500).send("Error fetching complaints");
+console.log("REAL ERROR:",err);
+res.status(500).json(err);
 
 }
 
 });
 
-/* ---------- Update Complaint Status ---------- */
+/* ---------------- Update Status ---------------- */
 
 app.post("/updateStatus",async(req,res)=>{
 
@@ -130,13 +130,13 @@ res.json({message:"Status Updated"});
 }catch(err){
 
 console.log("Update error:",err);
-res.status(500).send("Error updating status");
+res.status(500).json(err);
 
 }
 
 });
 
-/* ---------- Server ---------- */
+/* ---------------- Server ---------------- */
 
 const PORT = process.env.PORT || 5000;
 
