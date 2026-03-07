@@ -16,7 +16,7 @@ app.use("/uploads", express.static("uploads"));
 /* ---------- MongoDB Connection ---------- */
 
 mongoose.connect(
-"mongodb+srv://civicsense:MKDigital%40153@cluster0.vgrfm6d.mongodb.net/test?retryWrites=true&w=majority",
+"mongodb+srv://civicsense:MKDigital%40153@cluster0.vgrfm6d.mongodb.net/civicsense?retryWrites=true&w=majority",
 {
 useNewUrlParser:true,
 useUnifiedTopology:true
@@ -39,7 +39,7 @@ cb(null,Date.now()+"-"+file.originalname);
 
 });
 
-const upload = multer({storage:storage});
+const upload = multer({storage});
 
 /* ---------- Root Route ---------- */
 
@@ -54,8 +54,7 @@ app.post("/complaint",upload.single("photo"),async(req,res)=>{
 try{
 
 let issueText = req.body.issue.toLowerCase();
-
-let priority = "Normal";
+let priority="Normal";
 
 if(
 issueText.includes("hospital") ||
@@ -65,8 +64,6 @@ issueText.includes("fire")
 ){
 priority="High";
 }
-
-/* generate ticket id */
 
 let ticketId="CS-"+Math.floor(100000+Math.random()*900000);
 
@@ -86,11 +83,14 @@ photo:req.file?req.file.filename:""
 
 await complaint.save();
 
-res.send("Complaint submitted. Ticket ID: "+ticketId);
+res.json({
+message:"Complaint submitted",
+ticketId
+});
 
 }catch(err){
 
-console.log("Complaint Save Error:",err);
+console.log("Complaint save error:",err);
 res.status(500).send("Error saving complaint");
 
 }
@@ -103,12 +103,12 @@ app.get("/complaints",async(req,res)=>{
 
 try{
 
-const complaints = await Complaint.find({});
+const complaints=await Complaint.find({});
 res.json(complaints);
 
 }catch(err){
 
-console.log("Complaint fetch error:",err);
+console.log("Fetch error:",err);
 res.status(500).send("Error fetching complaints");
 
 }
@@ -125,11 +125,11 @@ await Complaint.findByIdAndUpdate(req.body.id,{
 status:req.body.status
 });
 
-res.send("Status Updated");
+res.json({message:"Status Updated"});
 
 }catch(err){
 
-console.log("Update Status Error:",err);
+console.log("Update error:",err);
 res.status(500).send("Error updating status");
 
 }
