@@ -1,179 +1,200 @@
-let userLat = null
-let userLon = null
+const express = require("express");
+const mongoose = require("mongoose");
+const multer = require("multer");
+const cors = require("cors");
+const path = require("path");
 
-/* ============================= */
-/* Detect User Location */
-/* ============================= */
+const app = express();
 
-function getLocation(){
+/* =========================
+   MIDDLEWARE
+========================= */
 
-if(navigator.geolocation){
+app.use(cors()); // allows frontend requests
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-navigator.geolocation.getCurrentPosition(position=>{
+app.use("/uploads", express.static("uploads"));
 
-userLat = position.coords.latitude
-userLon = position.coords.longitude
+/* =========================
+   MONGODB CONNECTION
+========================= */
 
-reverseGeocode(userLat,userLon)
+mongoose.connect(
+"mongodb+srv://civicsense:MKDigital%40153@cluster0.vgrfm6d.mongodb.net/civicsense?retryWrites=true&w=majority",
+{
+useNewUrlParser: true,
+useUnifiedTopology: true
+}
+)
+.then(() => console.log("MongoDB Connected"))
+.catch(err => console.log("MongoDB Error:", err));
 
-})
+/* =========================
+   COMPLAINT MODEL
+========================= */
 
-}else{
+const complaintSchema = new mongoose.Schema({
 
-alert("Geolocation not supported")
+ticketId:String,
+name:String,
+issue:String,
+location:String,
+latitude:String,
+longitude:String,
+priority:String,
+status:String,
+photo:String,
 
+createdAt:{
+type:Date,
+default:Date.now
 }
 
+});
+
+const Complaint = mongoose.model("Complaint", complaintSchema);
+
+/* =========================
+   FILE UPLOAD (MULTER)
+========================= */
+
+const storage = multer.diskStorage({
+
+destination:function(req,file,cb){
+cb(null,"uploads/");
+},
+
+filename:function(req,file,cb){
+cb(null,Date.now()+"-"+file.originalname);
 }
 
+});
 
-/* ============================= */
-/* Reverse Geocode */
-/* ============================= */
+const upload = multer({storage});
 
-function reverseGeocode(lat,lon){
+/* =========================
+   ROOT ROUTE
+========================= */
 
-fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+app.get("/",(req,res)=>{
+res.send("CivicSense Backend Running");
+});
 
-.then(res=>res.json())
+/* =========================
+   SUBMIT COMPLAINT
+========================= */
 
-.then(data=>{
-
-if(data.display_name){
-
-document.getElementById("location").value = data.display_name
-
-}
-
-})
-
-}
-
-
-/* ============================= */
-/* Location Search */
-/* ============================= */
-
-function searchNearbyLocations(query){
-
-if(query.length < 3){
-
-document.getElementById("locationSuggestions").style.display="none"
-return
-
-}
-
-fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`)
-
-.then(res=>res.json())
-
-.then(results=>{
-
-const list = document.getElementById("locationSuggestions")
-
-list.innerHTML=""
-
-results.forEach(place=>{
-
-let div = document.createElement("div")
-
-div.innerText = place.display_name
-
-div.style.padding="8px"
-div.style.cursor="pointer"
-
-div.onclick = ()=>{
-
-document.getElementById("location").value = place.display_name
-userLat = place.lat
-userLon = place.lon
-list.style.display="none"
-
-}
-
-list.appendChild(div)
-
-})
-
-list.style.display="block"
-
-})
-
-}
-
-
-/* ============================= */
-/* Image Preview */
-/* ============================= */
-
-function previewImage(event){
-
-const file = event.target.files[0]
-
-if(file){
-
-const img = document.getElementById("preview")
-const container = document.getElementById("previewContainer")
-
-img.src = URL.createObjectURL(file)
-
-container.style.display="block"
-
-}
-
-}
-
-
-/* ============================= */
-/* Submit Complaint */
-/* ============================= */
-
-async function submitComplaint(event){
-
-event.preventDefault()
-
-const name = document.getElementById("name").value
-const issue = document.getElementById("issue").value
-const location = document.getElementById("location").value
-const photo = document.getElementById("photo").files[0]
-
-let formData = new FormData()
-
-formData.append("name",name)
-formData.append("issue",issue)
-formData.append("location",location)
-formData.append("latitude",userLat)
-formData.append("longitude",userLon)
-
-if(photo){
-
-formData.append("photo",photo)
-
-}
+app.post("/complaint", upload.single("photo"), async(req,res)=>{
 
 try{
 
-const response = await fetch(
-"https://civicsense-pdca.onrender.com/complaint",
-{
-method:"POST",
-body:formData
+let issueText = req.body.issue ? req.body.issue.toLowerCase() : "";
+
+let priority = "Normal";
+
+if(
+issueText.includes("hospital") ||
+issueText.includes("school") ||
+issueText.includes("accident") ||
+issueText.includes("fire")
+){
+priority="High";
 }
-)
 
-const data = await response.json()
+let ticketId = "CS-" + Math.floor(100000 + Math.random()*900000);
 
-alert("Complaint submitted!\nTicket ID: "+data.ticketId)
+const complaint = new Complaint({
 
-document.getElementById("complaintForm").reset()
+ticketId:ticketId,
+name:req.body.name,
+issue:req.body.issue,
+location:req.body.location,
+latitude:req.body.latitude,
+longitude:req.body.longitude,
+priority:priority,
+status:"Pending",
+photo:req.file ? req.file.filename : ""
 
-document.getElementById("previewContainer").style.display="none"
+});
+
+await complaint.save();
+
+res.json({
+message:"Complaint submitted",
+ticketId:ticketId
+});
 
 }catch(err){
 
-alert("Error submitting complaint")
-console.log(err)
+console.log("SAVE ERROR:",err);
+
+res.status(500).json({
+message:"Error saving complaint"
+});
 
 }
 
+});
+
+/* =========================
+   GET ALL COMPLAINTS
+========================= */
+
+app.get("/complaints", async(req,res)=>{
+
+try{
+
+const complaints = await Complaint.find().sort({createdAt:-1});
+
+res.json(complaints);
+
+}catch(err){
+
+console.log("FETCH ERROR:",err);
+
+res.status(500).json({
+message:"Error fetching complaints"
+});
+
 }
+
+});
+
+/* =========================
+   UPDATE STATUS
+========================= */
+
+app.post("/updateStatus", async(req,res)=>{
+
+try{
+
+await Complaint.findByIdAndUpdate(req.body.id,{
+status:req.body.status
+});
+
+res.json({message:"Status updated"});
+
+}catch(err){
+
+console.log("UPDATE ERROR:",err);
+
+res.status(500).json({
+message:"Error updating status"
+});
+
+}
+
+});
+
+/* =========================
+   START SERVER
+========================= */
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT,()=>{
+
+console.log("Server running on port "+PORT);
+
+});
