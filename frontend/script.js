@@ -1,86 +1,79 @@
-// Global variables for location
+// =============================
+// GLOBAL VARIABLES
+// =============================
+
 let userLat = "";
 let userLon = "";
 
-// Get user's current location
+const API_URL = "https://civicsense-pdca.onrender.com";
+
+
+// =============================
+// GET USER LOCATION
+// =============================
+
 function getLocation() {
 
-  if (navigator.geolocation) {
+if (!navigator.geolocation) {
+alert("Geolocation not supported by browser");
+return;
+}
 
-    const locationInput = document.getElementById("location");
-    locationInput.value = "Detecting location...";
+const locationInput = document.getElementById("location");
+locationInput.value = "Detecting location...";
 
-    navigator.geolocation.getCurrentPosition(
+navigator.geolocation.getCurrentPosition(
 
-      function(position){
+function(position){
 
-        userLat = position.coords.latitude;
-        userLon = position.coords.longitude;
+userLat = position.coords.latitude;
+userLon = position.coords.longitude;
 
-        document.getElementById("location").value =
-        `${userLat.toFixed(6)}, ${userLon.toFixed(6)}`;
+locationInput.value =
+userLat.toFixed(6) + ", " + userLon.toFixed(6);
 
-        reverseGeocode(userLat,userLon);
+reverseGeocode(userLat,userLon);
 
-      },
+},
 
-      function(error){
+function(error){
 
-        document.getElementById("location").value = "";
+locationInput.value="";
 
-        switch(error.code){
+alert("Unable to detect location");
 
-          case error.PERMISSION_DENIED:
-          alert("Location access denied");
-          break;
+}
 
-          case error.POSITION_UNAVAILABLE:
-          alert("Location unavailable");
-          break;
-
-          case error.TIMEOUT:
-          alert("Location request timeout");
-          break;
-
-          default:
-          alert("Unknown location error");
-
-        }
-
-      }
-
-    );
-
-  }
-  else{
-
-    alert("Geolocation not supported by browser");
-
-  }
+);
 
 }
 
 
-// Convert coordinates to readable address
+
+// =============================
+// REVERSE GEOCODE
+// =============================
+
 function reverseGeocode(lat,lon){
 
-fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+fetch("https://civicsense-pdca.onrender.com/complaint", {
+  method: "POST",
+  body: formData
+})
 
 .then(res=>res.json())
 
 .then(data=>{
 
 if(data.display_name){
-
-document.getElementById("location").value=data.display_name;
-
+document.getElementById("location").value = data.display_name;
 }
 
 })
 
 .catch(err=>{
 
-console.log("Reverse geocode failed");
+console.log("Geocode error",err);
 
 });
 
@@ -88,30 +81,40 @@ console.log("Reverse geocode failed");
 
 
 
-// Submit complaint
-function submitComplaint(){
+// =============================
+// SUBMIT COMPLAINT
+// =============================
 
-const name=document.getElementById("name").value.trim();
-const issue=document.getElementById("issue").value.trim();
-const location=document.getElementById("location").value.trim();
-const fileInput=document.getElementById("photo");
+function submitComplaint(event){
+
+if(event){
+event.preventDefault();
+}
+
+const name = document.getElementById("name").value.trim();
+const issue = document.getElementById("issue").value.trim();
+const location = document.getElementById("location").value.trim();
+const fileInput = document.getElementById("photo");
 
 if(!name){
-alert("Please enter name");
+alert("Please enter your name");
 return;
 }
 
 if(!issue){
-alert("Please describe issue");
+alert("Please describe the issue");
 return;
 }
 
 if(!location){
-alert("Please detect location");
+alert("Please enter location");
 return;
 }
 
-const formData=new FormData();
+
+// create form data
+
+const formData = new FormData();
 
 formData.append("name",name);
 formData.append("issue",issue);
@@ -119,17 +122,15 @@ formData.append("location",location);
 formData.append("latitude",userLat);
 formData.append("longitude",userLon);
 
-if(fileInput.files.length>0){
+if(fileInput.files.length > 0){
 formData.append("photo",fileInput.files[0]);
 }
 
-const submitBtn=document.querySelector('button[type="submit"]');
-submitBtn.innerHTML="Submitting...";
-submitBtn.disabled=true;
 
 
-// IMPORTANT → using deployed backend
-fetch("https://civicsense-pdca.onrender.com/complaint",{
+// submit to backend
+
+fetch(API_URL + "/complaint",{
 
 method:"POST",
 body:formData
@@ -144,19 +145,18 @@ alert(data);
 
 document.getElementById("complaintForm").reset();
 
-submitBtn.innerHTML="Submit Complaint";
-submitBtn.disabled=false;
+userLat="";
+userLon="";
+
+document.getElementById("previewContainer").style.display="none";
 
 })
 
 .catch(err=>{
 
-console.error(err);
+console.log(err);
 
 alert("Error submitting complaint");
-
-submitBtn.innerHTML="Submit Complaint";
-submitBtn.disabled=false;
 
 });
 
@@ -164,31 +164,126 @@ submitBtn.disabled=false;
 
 
 
-// Image preview
+// =============================
+// IMAGE PREVIEW
+// =============================
+
 function previewImage(event){
 
-const file=event.target.files[0];
+const file = event.target.files[0];
 
-if(file){
+if(!file) return;
 
-if(!file.type.startsWith("image/")){
-alert("Select valid image file");
-event.target.value="";
+const img = document.getElementById("preview");
+const container = document.getElementById("previewContainer");
+
+img.src = URL.createObjectURL(file);
+
+container.style.display = "block";
+
+}
+
+
+
+// =============================
+// LOCATION AUTOCOMPLETE
+// =============================
+
+let locationTimeout;
+
+function searchNearbyLocations(query){
+
+clearTimeout(locationTimeout);
+
+if(query.length < 3){
+
+document.getElementById("locationSuggestions").style.display="none";
+
+return;
+
+}
+
+locationTimeout = setTimeout(async ()=>{
+
+try{
+
+const response = await fetch(
+
+`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`
+
+);
+
+const results = await response.json();
+
+showLocationSuggestions(results);
+
+}catch(err){
+
+console.log(err);
+
+}
+
+},500);
+
+}
+
+
+
+function showLocationSuggestions(results){
+
+const div = document.getElementById("locationSuggestions");
+
+div.innerHTML = results.map(r=>`
+
+<div onclick="selectLocation('${r.display_name}',${r.lat},${r.lon})"
+style="padding:10px;border-bottom:1px solid #eee;cursor:pointer">
+
+📍 ${r.display_name}
+
+</div>
+
+`).join("");
+
+div.style.display="block";
+
+}
+
+
+
+function selectLocation(name,lat,lon){
+
+document.getElementById("location").value=name;
+
+userLat = lat;
+userLon = lon;
+
+document.getElementById("locationSuggestions").style.display="none";
+
+}
+
+
+
+// =============================
+// VOICE INPUT
+// =============================
+
+function startVoiceInput(){
+
+if(!("webkitSpeechRecognition" in window)){
+alert("Voice input not supported");
 return;
 }
 
-if(file.size>5*1024*1024){
-alert("Image must be under 5MB");
-event.target.value="";
-return;
-}
+const recognition = new webkitSpeechRecognition();
 
-const img=document.getElementById("preview");
-const container=document.getElementById("previewContainer");
+recognition.lang = "en-US";
 
-img.src=URL.createObjectURL(file);
-container.style.display="block";
+recognition.onresult = function(e){
 
-}
+document.getElementById("issue").value = e.results[0][0].transcript;
+
+};
+
+recognition.start();
 
 }
